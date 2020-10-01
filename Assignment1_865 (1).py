@@ -20,6 +20,7 @@ from textblob import TextBlob
 import matplotlib.pyplot as plt
 from nltk.util import ngrams
 from nltk.corpus import stopwords 
+from sklearn.feature_extraction.text import CountVectorizer
 
 df_train = pd.read_csv("sentiment_train.csv")
 
@@ -31,6 +32,7 @@ df_test = pd.read_csv("sentiment_test.csv")
 print(df_test.info())
 print(df_test.head())
 
+
 # TODO: insert code here to perform the given task. 
 # Don't forget to document your code!
 
@@ -39,30 +41,7 @@ print(df_test.head())
 
 
 #Document Term Matrix
-from sklearn.feature_extraction.text import CountVectorizer
 
-# Stopword removal  
-stop_words = set(stopwords.words('english')) 
-for i, line in enumerate(data_clean.Sentence): 
-    data_clean.Sentence[i] = ' '.join([x for 
-        x in nltk.word_tokenize(line) if 
-        ( x not in stop_words ) and ( x not in your_list )]) 
-
-
-
-# Applying TFIDF 
-vectorizer = TfidfVectorizer(ngram_range = (3,3)) 
-X2 = vectorizer.fit_transform(data_clean.Sentence) 
-scores = (X2.toarray()) 
-print("\n\nScores : \n", scores) 
-
-sums = X2.sum(axis = 0) 
-data1 = [] 
-for col, term in enumerate(features): 
-    data1.append( (term, sums[0,col] )) 
-ranking = pd.DataFrame(data1, columns = ['term','rank']) 
-words = (ranking.sort_values('rank', ascending = False)) 
-print ("\n\nWords head : \n", words.head(7)) 
 
 ##Document-Term Matrix
 #cv = CountVectorizer(stop_words='english')
@@ -114,7 +93,7 @@ for col, term in enumerate(features):
     data1.append( (term, sums[0,col] )) 
 ranking = pd.DataFrame(data1, columns = ['term','rank']) 
 words = (ranking.sort_values('rank', ascending = False)) 
-print ("\n\nWords head : \n", words.head(7)) 
+print ("\n\nWords head : \n", words.head(10)) 
 
 
 #Sentiment Analysis 
@@ -126,6 +105,7 @@ df_clean_train['polarity'] = df_clean_train['Sentence'].apply(pol)
 df_clean_train['subjectivity'] = df_clean_train['Sentence'].apply(sub)
 df_clean_train['review_len'] = df_clean_train['Sentence'].astype(str).apply(len)
 df_clean_train['word_count'] = df_clean_train['Sentence'].apply(lambda x: len(str(x).split()))
+df_clean_train['Polarity'] = df_train['Polarity']
 df_clean_train
 
 print('5 random reviews with the highest positive sentiment polarity: \n')
@@ -151,9 +131,9 @@ for i in range(a,a+4):
 def clean_text_round2(text1):
     '''Make text lowercase, remove text in square brackets, remove punctuation and remove words containing numbers.'''
     text1 = text1.lower()
-    #text1 = re.sub('\[.*?\]', '', text1)
-   # text1 = re.sub('[%s]' % re.escape(string.punctuation), '', text1)
-   # text1 = re.sub('\w*\d\w*', '', text1)
+    text1 = re.sub('\[.*?\]', '', text1)
+    text1 = re.sub('[%s]' % re.escape(string.punctuation), '', text1)
+    text1 = re.sub('\w*\d\w*', '', text1)
     return text1
 
 round2_test = lambda x: clean_text_round2(x)
@@ -167,19 +147,11 @@ df_clean_test['polarity'] = df_clean_test['Sentence'].apply(pol)
 df_clean_test['subjectivity'] = df_clean_test['Sentence'].apply(sub)
 df_clean_test['review_len'] = df_clean_test['Sentence'].astype(str).apply(len)
 df_clean_test['word_count'] = df_clean_test'Sentence'].apply(lambda x: len(str(x).split()))
+df_clean_test['Polarity'] = df_test['Polarity']
 df_clean_test
 
-print('5 random reviews with the highest positive sentiment polarity: \n')
-cl = df_clean_train.loc[df_clean_train.polarity == 1, ['Sentence']].sample(5).values
-for c in cl:
-    print(c[0])
 
-#positive 
-df_clean_test.loc[df_clean_test.polarity == 1]
-#negative
-df_clean_test.loc[df_clean_test.polarity == -1]
-#neutral
-df_clean_test.loc[df_clean_test.polarity == 0]
+
 
 ##EDA on TRAIN
 
@@ -230,22 +202,16 @@ from sklearn.metrics import f1_score, classification_report, accuracy_score
 
 #df_clean_train['polarity'] = df_clean_train['polarity'].astype(int).astype('category')
 train_posts = df_clean_train['Sentence']
-train_tags = df_clean_train['polarity']
+train_label = df_clean_train['Polarity']
 test_posts = df_clean_test['Sentence']
-test_tags = df_clean_test['polarity']
+test_label = df_clean_test['Polarity']
 
-
-svm_C = make_pipeline(CountVectorizer(ngram_range=(1,2)),SGDClassifier(loss='hinge', penalty='l2', alpha=0.001,  random_state=42), ).fit(train_posts, train_tags)
+svm_C = make_pipeline(CountVectorizer(ngram_range=(1,2)),SGDClassifier(loss='hinge', penalty='l2', alpha=0.005, n_iter=5, random_state=42), ).fit(train_posts, train_label)
 svm_prediction = svm_C.predict(test_posts)
-SVM_score_train = f1_score(train_tags, svm_C.predict(train_posts)
-SVM_score_test = f1_score(test_tags, svm_C.predict(test_posts)
-print('SVM_score_f1(test):{}, SVM_score_f1(train):{}'.format(SVM_score_test, SVM_score_train))
+SVM_score_train = f1_score(train_label, svm_C.predict(train_posts)
+SVM_score_test = f1_score(test_label, svm_C.predict(test_posts)
+print ('SVM_score_f1(test):{}, SVM_score_f1(train):{}'.format(SVM_score_test, SVM_score_train))
 
 #LR MODEL
-from sklearn.linear_model import LogisticRegression
-lr1 = make_pipeline(CountVectorizer(ngram_range=(1,2)), LogisticRegression(), ).fit(train_posts, train_tags)
-lr1_prediction = lr1.predict(test_posts)
-lr1_score_train = f1_score(train_tags, lr1.predict(train_posts))
-lr1_score_test = f1_score(test_tags, lr1.predict(test_posts))
-print ('lr1_score_f1(test):{} --- lr1_score_f1(train):{}'.format(lr1_score_test, lr1_score_train))
+
 
