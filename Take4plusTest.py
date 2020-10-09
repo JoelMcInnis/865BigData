@@ -90,19 +90,6 @@ cleaned_train = lambda x: clean_text(x)
 df_clean_train = pd.DataFrame(df_train.Sentence.apply(cleaned_train))
 df_clean_train
 
-
-    
-
-vectorizer = TfidfVectorizer(preprocessor=clean_text, 
-                             max_features = 1000, 
-                             ngram_range=[1,4],
-                             stop_words=None,
-                             strip_accents="unicode", 
-                             lowercase=False, max_df=0.25, min_df=0.001, use_idf=True)
-
-
-
-
 pol = lambda x: TextBlob(x).sentiment.polarity
 sub = lambda x: TextBlob(x).sentiment.subjectivity
 
@@ -183,7 +170,7 @@ print("\n\nRF")
 rf_clf = RandomForestClassifier(n_estimators=500, max_depth=10, random_state=55)
 rf_clf.fit(X_train, y_train)
 
-imp_rf = pd.DataFrame(clf.feature_importances_, index = feature_names, columns=['importance']).sort_values('importance', ascending=False).iloc[0:15,:]
+imp_rf = pd.DataFrame(rf_clf.feature_importances_, index = feature_names, columns=['importance']).sort_values('importance', ascending=False).iloc[0:15,:]
 print(imp_rf)
 
 y_pred_rf = rf_clf.predict(X_val)
@@ -281,4 +268,23 @@ df_clean_test['gunning_fog'] =  df_clean_test['Sentence'].apply(lambda x: textst
 
 df_clean_test.head()
 
+tfidf_vectorizer2 = TfidfVectorizer(min_df=.02, max_df=.5, ngram_range=[1,3], max_features=500, stop_words='english')
+dtm_tfidf2 = tfidf_vectorizer.fit_transform(df_clean_test['Sentence'])
 
+bow_df_tfidf2 = pd.DataFrame(dtm_tfidf2.toarray(), columns=tfidf_vectorizer2.get_feature_names(), index=df_clean_test.index)
+bow_df_tfidf2.shape
+
+df_bow_tfidf = pd.concat([df_clean_train, bow_df_tfidf], axis=1)
+df_bow_tfidf.drop(columns=['Sentence'], inplace=True)
+df_bow_tfidf.shape
+df_bow_tfidf.head()
+
+
+
+
+
+
+
+#import linecache
+#line = linecache.getline("sentiment_test.csv", 1799)
+#line
