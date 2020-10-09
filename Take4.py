@@ -165,7 +165,8 @@ ind = sorted(range(len(imp)), key=lambda i: imp[i])[-15:]
 imp[ind]
 feature_names[ind]
 
-from sklearn.metrics import confusion_matrix
+
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 confusion_matrix(y_val, y_pred_dt)
 from sklearn.metrics import classification_report
@@ -179,17 +180,17 @@ print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_dt, average='micro')))
 
 ##Random Forest
 print("\n\nRF")
-clf = RandomForestClassifier(n_estimators=500, max_depth=10, random_state=55)
-clf.fit(X_train, y_train)
+rf_clf = RandomForestClassifier(n_estimators=500, max_depth=10, random_state=55)
+rf_clf.fit(X_train, y_train)
 
-imp = pd.DataFrame(clf.feature_importances_, index = feature_names, columns=['importance']).sort_values('importance', ascending=False).iloc[0:15,:]
-print(imp)
+imp_rf = pd.DataFrame(clf.feature_importances_, index = feature_names, columns=['importance']).sort_values('importance', ascending=False).iloc[0:15,:]
+print(imp_rf)
 
-y_pred = clf.predict(X_val)
-print(accuracy_score(y_val, y_pred))
-print(confusion_matrix(y_val, y_pred))
-print(classification_report(y_val, y_pred))
-print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_dt, average='micro')))
+y_pred_rf = rf_clf.predict(X_val)
+print(accuracy_score(y_val, y_pred_rf))
+print(confusion_matrix(y_val, y_pred_rf))
+print(classification_report(y_val, y_pred_rf))
+print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_rf, average='micro')))
 
 
 #KNN
@@ -203,7 +204,7 @@ y_pred_knn = knn_clf.predict(X_val)
 print(accuracy_score(y_val, y_pred_knn))
 print(confusion_matrix(y_val, y_pred_knn))
 print(classification_report(y_val, y_pred_knn))
-print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_dt, average='micro')))
+print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_knn, average='micro')))
 
 from sklearn.naive_bayes import GaussianNB
 
@@ -216,5 +217,4 @@ y_pred_nb = gnb.predict(X_val)
 print(accuracy_score(y_val, y_pred_nb))
 print(confusion_matrix(y_val, y_pred_nb))
 print(classification_report(y_val, y_pred_nb))
-
-gnb.theta_
+print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_nb, average='micro')))
