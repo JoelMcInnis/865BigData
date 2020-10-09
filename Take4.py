@@ -42,6 +42,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import re
 import unidecode
+from textblob import TextBlob
 import textstat
 import string  
 from sklearn.pipeline import make_pipeline, FeatureUnion, Pipeline
@@ -107,6 +108,7 @@ sub = lambda x: TextBlob(x).sentiment.subjectivity
 
 
 df_clean_train['subjectivity'] = df_clean_train['Sentence'].apply(sub)
+df_clean_train['polar'] = df_clean_train['Sentence'].apply(pol)
 df_clean_train['Polarity'] = df_train['Polarity']
 df_clean_train['review_len'] = df_clean_train['Sentence'].astype(str).apply(len)
 df_clean_train['word_count'] = df_clean_train['Sentence'].apply(lambda x: len(str(x).split()))
@@ -143,13 +145,13 @@ feature_names = X.columns
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.15, random_state=42)
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.10, random_state=42)
 
 ##Decision Tree
 clf = DecisionTreeClassifier(random_state=42, 
-                             min_samples_split=10, 
+                             min_samples_split=15, 
                              min_samples_leaf=10, 
-                             max_depth=6)
+                             max_depth=4)
 
 
 clf.fit(X_train, y_train)
@@ -172,3 +174,47 @@ print("Confusion matrix:")
 print(confusion_matrix(y_val, y_pred_dt))
 
 print(classification_report(y_val, y_pred_dt, target_names=class_names))
+print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_dt, average='micro')))
+
+
+##Random Forest
+print("\n\nRF")
+clf = RandomForestClassifier(n_estimators=500, max_depth=10, random_state=55)
+clf.fit(X_train, y_train)
+
+imp = pd.DataFrame(clf.feature_importances_, index = feature_names, columns=['importance']).sort_values('importance', ascending=False).iloc[0:15,:]
+print(imp)
+
+y_pred = clf.predict(X_val)
+print(accuracy_score(y_val, y_pred))
+print(confusion_matrix(y_val, y_pred))
+print(classification_report(y_val, y_pred))
+print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_dt, average='micro')))
+
+
+#KNN
+print("\n\nKNN")
+from sklearn.neighbors import KNeighborsClassifier
+
+knn_clf = KNeighborsClassifier(n_neighbors=15)
+knn_clf.fit(X_train, y_train)
+
+y_pred_knn = knn_clf.predict(X_val)
+print(accuracy_score(y_val, y_pred_knn))
+print(confusion_matrix(y_val, y_pred_knn))
+print(classification_report(y_val, y_pred_knn))
+print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_dt, average='micro')))
+
+from sklearn.naive_bayes import GaussianNB
+
+print("NB")
+
+gnb = GaussianNB()
+gnb = gnb.fit(X_train, y_train)
+
+y_pred_nb = gnb.predict(X_val)
+print(accuracy_score(y_val, y_pred_nb))
+print(confusion_matrix(y_val, y_pred_nb))
+print(classification_report(y_val, y_pred_nb))
+
+gnb.theta_
