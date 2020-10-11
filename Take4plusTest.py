@@ -110,7 +110,7 @@ df_clean_train.head()
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-tfidf_vectorizer = TfidfVectorizer(min_df=.02, max_df=.5, ngram_range=[1,3], max_features=500, stop_words='english')
+tfidf_vectorizer = TfidfVectorizer(min_df=.01, max_df=.25, ngram_range=[1,3], max_features=1000, stop_words='english')
 dtm_tfidf = tfidf_vectorizer.fit_transform(df_clean_train['Sentence'])
 
 bow_df_tfidf = pd.DataFrame(dtm_tfidf.toarray(), columns=tfidf_vectorizer.get_feature_names(), index=df_clean_train.index)
@@ -233,22 +233,11 @@ print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_grb, average='micro'))
 ### Clean Actual Test Data
 #####################################################
 
+
+
 cleaned_test = lambda x: clean_text(x)
 df_clean_test = pd.DataFrame(df_test.Sentence.apply(cleaned_test))
 df_clean_test
-
-
-    
-
-vectorizer = TfidfVectorizer(preprocessor=clean_text, 
-                             max_features = 1000, 
-                             ngram_range=[1,4],
-                             stop_words=None,
-                             strip_accents="unicode", 
-                             lowercase=False, max_df=0.25, min_df=0.001, use_idf=True)
-
-
-
 
 pol = lambda x: TextBlob(x).sentiment.polarity
 sub = lambda x: TextBlob(x).sentiment.subjectivity
@@ -268,16 +257,28 @@ df_clean_test['gunning_fog'] =  df_clean_test['Sentence'].apply(lambda x: textst
 
 df_clean_test.head()
 
-tfidf_vectorizer2 = TfidfVectorizer(min_df=.02, max_df=.5, ngram_range=[1,3], max_features=500, stop_words='english')
-dtm_tfidf2 = tfidf_vectorizer.fit_transform(df_clean_test['Sentence'])
 
-bow_df_tfidf2 = pd.DataFrame(dtm_tfidf2.toarray(), columns=tfidf_vectorizer2.get_feature_names(), index=df_clean_test.index)
-bow_df_tfidf2.shape
+test_y = df_clean_test['Polarity']
+test_X = df_clean_test.drop(['Polarity','Sentence'], axis=1)
 
-df_bow_tfidf = pd.concat([df_clean_train, bow_df_tfidf], axis=1)
-df_bow_tfidf.drop(columns=['Sentence'], inplace=True)
-df_bow_tfidf.shape
-df_bow_tfidf.head()
+
+#Random Forest
+test_pred_rf = rf_clf.predict(test_X)
+print(accuracy_score(test_y, test_pred_rf ))
+print(confusion_matrix(test_y, test_pred_rf ))
+print(classification_report(test_y, test_pred_rf ))
+print("\nF1 Score = {:.5f}".format(f1_score(test_y, test_pred_rf )))
+
+#KNN
+y_pred_knn = knn_clf.predict(X_val)
+print(accuracy_score(y_val, y_pred_knn))
+print(confusion_matrix(y_val, y_pred_knn))
+print(classification_report(y_val, y_pred_knn))
+print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_knn, average='micro')))
+
+
+
+
 
 
 
