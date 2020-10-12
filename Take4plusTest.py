@@ -14,6 +14,7 @@ Submission to Question [X], Part [X]
 
 # TODO: import other libraries as necessary
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction import stop_words
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
@@ -238,3 +239,10 @@ print("\nF1 Score = {:.5f}".format(f1_score(test_y, test_pred_rf, average="micro
 
 
 
+## Review the incorrect 
+df_test['test_pred_dt']  = test_pred_dt
+
+correct_df = df_test
+correct_df['Correct_Predict'] = np.where(correct_df['test_pred_dt']==correct_df['Polarity'], 'yes', 'no')
+correct_df = correct_df[correct_df['Correct_Predict']== 'no']
+correct_df
