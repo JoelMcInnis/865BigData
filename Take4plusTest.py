@@ -10,33 +10,25 @@
 Submission to Question [X], Part [X]
 
 
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.feature_extraction import stop_words
-
 
 
 # TODO: import other libraries as necessary
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction import stop_words
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
-
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import cross_val_predict
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.feature_extraction import stop_words
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.decomposition import NMF
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
-from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
@@ -47,17 +39,14 @@ import textstat
 import string  
 from sklearn.pipeline import make_pipeline, FeatureUnion, Pipeline
 from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report, f1_score
 from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.feature_extraction import stop_words
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import FunctionTransformer
-from sklearn.decomposition import NMF
-from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.preprocessing import StandardScaler
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+
 
 
 df_train = pd.read_csv("sentiment_train.csv")
@@ -108,7 +97,6 @@ df_clean_train['gunning_fog'] =  df_clean_train['Sentence'].apply(lambda x: text
 
 df_clean_train.head()
 
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 tfidf_vectorizer = TfidfVectorizer(min_df=.01, max_df=.25, ngram_range=[1,3], max_features=1000, stop_words='english')
 dtm_tfidf = tfidf_vectorizer.fit_transform(df_clean_train['Sentence'])
@@ -121,8 +109,7 @@ df_bow_tfidf.drop(columns=['Sentence'], inplace=True)
 df_bow_tfidf.shape
 df_bow_tfidf.head()
 
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.preprocessing import StandardScaler
+
 
 y = df_clean_train['Polarity']
 X = df_clean_train.drop(['Polarity','Sentence'], axis=1)
@@ -142,37 +129,25 @@ clf = DecisionTreeClassifier(random_state=42,
 
 
 clf.fit(X_train, y_train)
-
 y_pred_dt = clf.predict(X_val)
 class_names = [str(x) for x in clf.classes_]
-
 imp = clf.tree_.compute_feature_importances(normalize=False)
 ind = sorted(range(len(imp)), key=lambda i: imp[i])[-15:]
-
 imp[ind]
 feature_names[ind]
-
-
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-
 confusion_matrix(y_val, y_pred_dt)
-from sklearn.metrics import classification_report
-
 print("Confusion matrix:")
 print(confusion_matrix(y_val, y_pred_dt))
-
 print(classification_report(y_val, y_pred_dt, target_names=class_names))
 print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_dt, average='micro')))
 
 
 ##Random Forest
 print("\n\nRF")
-rf_clf = RandomForestClassifier(n_estimators=500, max_depth=10, random_state=55)
+rf_clf = RandomForestClassifier(n_estimators=500, max_depth=8, random_state=42)
 rf_clf.fit(X_train, y_train)
-
 imp_rf = pd.DataFrame(rf_clf.feature_importances_, index = feature_names, columns=['importance']).sort_values('importance', ascending=False).iloc[0:15,:]
 print(imp_rf)
-
 y_pred_rf = rf_clf.predict(X_val)
 print(accuracy_score(y_val, y_pred_rf))
 print(confusion_matrix(y_val, y_pred_rf))
@@ -182,46 +157,29 @@ print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_rf, average='micro')))
 
 #KNN
 print("\n\nKNN")
-from sklearn.neighbors import KNeighborsClassifier
-
 knn_clf = KNeighborsClassifier(n_neighbors=15)
 knn_clf.fit(X_train, y_train)
-
 y_pred_knn = knn_clf.predict(X_val)
 print(accuracy_score(y_val, y_pred_knn))
 print(confusion_matrix(y_val, y_pred_knn))
 print(classification_report(y_val, y_pred_knn))
 print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_knn, average='micro')))
 
-from sklearn.naive_bayes import GaussianNB
-
 
 ##NB
 print("NB")
-
 gnb = GaussianNB()
 gnb = gnb.fit(X_train, y_train)
-
 y_pred_nb = gnb.predict(X_val)
 print(accuracy_score(y_val, y_pred_nb))
 print(confusion_matrix(y_val, y_pred_nb))
 print(classification_report(y_val, y_pred_nb))
 print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_nb, average='micro')))
 
-#Adaboost
-print("\n\nAdaboost")
-ad_clf = AdaBoostClassifier(n_estimators=100)
-ad_clf.fit(X_train, y_train)
-y_pred_ad = ad_clf.predict(X_val)
-print(accuracy_score(y_val, y_pred_ad))
-print(confusion_matrix(y_val, y_pred_ad))
-print(classification_report(y_val, y_pred_ad))
-print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_ad, average='micro')))
-
 
 #GradientBoost
 print("\n\nGTB")
-grb_clf = GradientBoostingClassifier(n_estimators=100, learning_rate=1.0, max_depth=1, random_state=42)
+grb_clf = GradientBoostingClassifier(n_estimators=100, learning_rate=1.0, max_depth=2, random_state=42)
 grb_clf.fit(X_train, y_train)
 y_pred_grb = grb_clf.predict(X_val)
 print(accuracy_score(y_val, y_pred_grb))
@@ -230,9 +188,7 @@ print(classification_report(y_val, y_pred_grb))
 print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_grb, average='micro')))
 
 #####################################################
-### Clean Actual Test Data
-#####################################################
-
+#Clean Test Data
 
 
 cleaned_test = lambda x: clean_text(x)
@@ -261,31 +217,24 @@ df_clean_test.head()
 test_y = df_clean_test['Polarity']
 test_X = df_clean_test.drop(['Polarity','Sentence'], axis=1)
 
+test_X = scaler.fit_transform(test_X)
+
+
+#Predict using Test Data
+
+#Decision Tree
+test_pred_dt = clf.predict(test_X)
+print(accuracy_score(test_y, test_pred_dt ))
+print(confusion_matrix(test_y, test_pred_dt ))
+print(classification_report(test_y, test_pred_dt ))
+print("\nF1 Score = {:.5f}".format(f1_score(test_y, test_pred_dt, average="micro" )))
 
 #Random Forest
 test_pred_rf = rf_clf.predict(test_X)
 print(accuracy_score(test_y, test_pred_rf ))
 print(confusion_matrix(test_y, test_pred_rf ))
 print(classification_report(test_y, test_pred_rf ))
-print("\nF1 Score = {:.5f}".format(f1_score(test_y, test_pred_rf )))
-
-#KNN
-y_pred_knn = knn_clf.predict(X_val)
-print(accuracy_score(y_val, y_pred_knn))
-print(confusion_matrix(y_val, y_pred_knn))
-print(classification_report(y_val, y_pred_knn))
-print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_knn, average='micro')))
+print("\nF1 Score = {:.5f}".format(f1_score(test_y, test_pred_rf, average="micro" )))
 
 
 
-
-
-
-
-
-
-
-
-#import linecache
-#line = linecache.getline("sentiment_test.csv", 1799)
-#line
