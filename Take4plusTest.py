@@ -1,18 +1,12 @@
-[First name, Last name]
+Joel McInnis
 
-[Student number]
-[Program]
-[Cohort]
-[Course Number]
-[Date]
+20191841
+GMMA 865
+October 14, 2020
 
+Submission to Question 2, Part 1
 
-Submission to Question [X], Part [X]
-
-
-
-
-# TODO: import other libraries as necessary
+#import other libraries as necessary
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -48,19 +42,16 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 
-
-
+#load data
 df_train = pd.read_csv("sentiment_train.csv")
-
 print(df_train.info())
 print(df_train.head())
 
 df_test = pd.read_csv("sentiment_test.csv")
-
 print(df_test.info())
 print(df_test.head())
 
-
+#Train data preprocessing
 stop_words = set(stopwords.words('english'))
 
 lemmer = WordNetLemmatizer()
@@ -83,7 +74,6 @@ df_clean_train
 pol = lambda x: TextBlob(x).sentiment.polarity
 sub = lambda x: TextBlob(x).sentiment.subjectivity
 
-
 df_clean_train['subjectivity'] = df_clean_train['Sentence'].apply(sub)
 df_clean_train['polar'] = df_clean_train['Sentence'].apply(pol)
 df_clean_train['Polarity'] = df_train['Polarity']
@@ -98,7 +88,6 @@ df_clean_train['gunning_fog'] =  df_clean_train['Sentence'].apply(lambda x: text
 
 df_clean_train.head()
 
-
 tfidf_vectorizer = TfidfVectorizer(min_df=.01, max_df=.25, ngram_range=[1,3], max_features=1000, stop_words='english')
 dtm_tfidf = tfidf_vectorizer.fit_transform(df_clean_train['Sentence'])
 
@@ -110,8 +99,7 @@ df_bow_tfidf.drop(columns=['Sentence'], inplace=True)
 df_bow_tfidf.shape
 df_bow_tfidf.head()
 
-
-
+#Split the training data into test/train
 y = df_clean_train['Polarity']
 X = df_clean_train.drop(['Polarity','Sentence'], axis=1)
 
@@ -190,8 +178,6 @@ print("\nF1 Score = {:.5f}".format(f1_score(y_val, y_pred_grb, average='micro'))
 
 #####################################################
 #Clean Test Data
-
-
 cleaned_test = lambda x: clean_text(x)
 df_clean_test = pd.DataFrame(df_test.Sentence.apply(cleaned_test))
 df_clean_test
@@ -213,7 +199,6 @@ df_clean_test['flesch_kincaid_grade'] =  df_clean_test['Sentence'].apply(lambda 
 df_clean_test['gunning_fog'] =  df_clean_test['Sentence'].apply(lambda x: textstat.gunning_fog(x))
 
 df_clean_test.head()
-
 
 test_y = df_clean_test['Polarity']
 test_X = df_clean_test.drop(['Polarity','Sentence'], axis=1)
@@ -239,10 +224,21 @@ print("\nF1 Score = {:.5f}".format(f1_score(test_y, test_pred_rf, average="micro
 
 
 
-## Review the incorrect 
+## Review the incorrect predictions
 df_test['test_pred_dt']  = test_pred_dt
+df_clean_test['test_pred_dt']  = test_pred_dt
 
+correct_df_clean = df_clean_test
 correct_df = df_test
+correct_df_clean['Correct_Predict'] = np.where(correct_df_clean['test_pred_dt']==correct_df_clean['Polarity'], 'yes', 'no')
+show_df_clean = correct_df_clean[correct_df_clean['Correct_Predict']== 'no']
 correct_df['Correct_Predict'] = np.where(correct_df['test_pred_dt']==correct_df['Polarity'], 'yes', 'no')
-correct_df = correct_df[correct_df['Correct_Predict']== 'no']
-correct_df
+show_df = correct_df[correct_df['Correct_Predict']== 'no']
+
+
+show_df
+show_df_clean
+
+#show_df.to_csv(r'C:\Users\mcinn\Desktop\Sentence_wordcount.csv', index = False)
+#show_df_clean.to_csv(r'C:\Users\mcinn\Desktop\Sentence_wrong1.csv', index = False)
+#correct_df_clean.to_csv(r'C:\Users\mcinn\Desktop\Sentence_all.csv', index = False)
